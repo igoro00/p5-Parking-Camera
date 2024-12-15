@@ -1,30 +1,32 @@
-// GLOBAL VARS & TYPES
+// @ts-expect-error
+console.log = console.context().log;
 
-//@ts-expect-error
+import { SliderClient } from "./sliderClient";
+console.log("Hello from frontend!");
 p5.disableFriendlyErrors = true;
-let steering: p5.Element;
-
 const E = Math.E
 let sketch: p5.Graphics;
 let myCamera: p5.Camera;
 
 let fps: p5.Element;
-let sensorL1: p5.Element;
-let sensorL2: p5.Element;
-let sensorR1: p5.Element;
-let sensorR2: p5.Element;
 
 let capture: p5.Element
 let captureImg: p5.Image;
 
 let cWidth:number
 let cHeight: number;
+let sliderClient: SliderClient;
 
+let steering = 127;
 let l2 = 100;
 let l1 = 100;
 let r1 = 100;
 let r2 = 100;
 
+
+function setSteering(value: number) {
+  steering = value;
+}
 function setL2(value: number) {
   l2 = value;
 }
@@ -40,11 +42,8 @@ function setR2(value: number) {
 
 
 function setup() {
-  //@ts-expect-error
-  capture = createCapture(VIDEO, () => {
-    capture.size(2048, 1536);
-    cWidth = capture.width;
-    cHeight = capture.height;
+    cWidth = 1024;
+    cHeight = 768;
     createCanvas(cWidth, cHeight, WEBGL).style("position", "absolute").style("top", "0").style("left", "0");
 
     sketch = createGraphics(cWidth, cHeight);
@@ -55,55 +54,44 @@ function setup() {
 
     sketch.rectMode(CENTER).noFill();
 
-    steering = createSlider(0, 255, 127, 1).position(100, 10).style("cWidth", "1800px");
-    createP("Steering: ").position(10, 10).style("color", "white");
-    sensorL2 = createSlider(0, 255, 55, 1).position(100, 30).style("cWidth", "1800px");
-    createP("SensorL2: ").position(10, 30).style("color", "white");
-    sensorL1 = createSlider(0, 255, 55, 1).position(100, 50).style("cWidth", "1800px");
-    createP("SensorL1: ").position(10, 50).style("color", "white");
-    sensorR1 = createSlider(0, 255, 55, 1).position(100, 70).style("cWidth", "1800px");
-    createP("SensorR1: ").position(10, 70).style("color", "white");
-    sensorR2 = createSlider(0, 255, 55, 1).position(100, 90).style("cWidth", "1800px");
-    createP("SensorR2: ").position(10, 90).style("color", "white");
-    
-    steering.elt.addEventListener("input", ()=>redraw());
-    sensorL2.elt.addEventListener("input", ()=>redraw());
-    sensorL1.elt.addEventListener("input", ()=>redraw());
-    sensorR1.elt.addEventListener("input", ()=>redraw());
-    sensorR2.elt.addEventListener("input", ()=>redraw());
-
     fps = createP("FPS: ").position(10, 110);
     fps.style("color", "white");
     fps.style("display", "block");
     fps.style("white-space", "pre");
     fps.style("font-family", "monospace");
-    noLoop();
-    // redraw();
-  })
+    
+    sliderClient = new SliderClient("http://localhost:3000", ([s1, s2, s3, s4, s5]) => {
+      setSteering(s1);
+      setL2(s2);
+      setL1(s3);
+      setR1(s4);
+      setR2(s5);
+      console.log("Received slider values:", s1, s2, s3, s4, s5);
+    });
+    // setInterval(() => {redraw()}, 1000/30)
+    frameRate(30);
+    // loop();
+
 }
 
-function straight(origin: p5.Vector, length: number, angle: number, draw = true) {
+ function straight(origin: p5.Vector, length: number, angle: number, draw = true) {
   const x = origin.x + length * cos(angle);
   const y = origin.y + length * sin(angle);
   draw && sketch.line(origin.x, origin.y, x, y);
   return createVector(x, y);
 }
 function draw() {
-  if(steering === undefined) return;
+  if (steering==undefined) return;
+  if (l2==undefined) return;
+  if (l1==undefined) return;
+  if (r1==undefined) return;
+  if (r2==undefined) return;
+  console.log("Drawing");
   const startMilis = window.performance.now()
   // orbitControl();
   clear();
-  // background("white")
   
-  setL1(<number>sensorL1.value())
-  setL2(<number>sensorL2.value())
-  setR1(<number>sensorR1.value())
-  setR2(<number>sensorR2.value())
-  
-  const steeringValue = <number>steering.value();
-  console.log(steeringValue)
-  
-  let angle = map(steeringValue, 0, 255, PI / 2, -PI / 2);
+  let angle = map(steering, 0, 255, PI / 2, -PI / 2);
   
   sketch.clear()
   // sketch.background(255) //debug plane
@@ -143,7 +131,7 @@ function draw() {
     `FPS: ${Math.floor(frameRate())}
 Frame time[ms]: ${(window.performance.now() - startMilis).toFixed(4)}`
   );
-    translate(0, 475, 0)
+    translate(0, 120, 0)
 
   const green = color(70, 255, 70)
   const yellow = color(255, 255, 70)
@@ -185,6 +173,8 @@ Frame time[ms]: ${(window.performance.now() - startMilis).toFixed(4)}`
   } else if (r2 < 200){
     glassWall(green, createVector(300, 50, 0), createVector(0, 0, PI / 12));
   }
+
+  // window.electron.triggerRender();
 }
 
 function glassWall(c: p5.Color, position: p5.Vector = createVector(0, 0, 0), rotation: p5.Vector = createVector(0, 0, 0)) {
@@ -225,3 +215,7 @@ function glassWall(c: p5.Color, position: p5.Vector = createVector(0, 0, 0), rot
   }
   pop()
 }
+
+// so it doesnt get stripped by bun
+console.log(typeof draw === "function");
+console.log(typeof setup === "function");

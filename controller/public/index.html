@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sliders</title>
+  <style>
+    .slider-container {
+      display: flex;
+      flex-direction: column;
+      width: 300px;
+      margin: 20px auto;
+    }
+    .slider {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="slider-container">
+    <input type="range" min="0" max="255" class="slider" id="slider1">
+    <input type="range" min="0" max="255" class="slider" id="slider2">
+    <input type="range" min="0" max="255" class="slider" id="slider3">
+    <input type="range" min="0" max="255" class="slider" id="slider4">
+    <input type="range" min="0" max="255" class="slider" id="slider5">
+  </div>
+  <script>
+  console.log("does this work")
+    const sliders = Array.from(document.querySelectorAll('.slider'));
+    // REST API update
+    async function updateSliders() {
+      const values = sliders.map(slider => parseInt(slider.value, 10));
+      try {
+        await fetch('/api/sliders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sliders: values }),
+        });
+      } catch (error) {
+        console.error('Failed to update sliders:', error);
+      }
+    }
+
+    // Attach event listeners to sliders
+    sliders.forEach(slider => {
+      slider.addEventListener('input', updateSliders);
+    });
+
+    // WebSocket for real-time updates
+    const socket = new WebSocket(`ws://${window.location.host}`);
+
+    socket.addEventListener('message', (event) => {
+      try {
+        const newValues = JSON.parse(event.data);
+        sliders.forEach((slider, index) => {
+          slider.value = newValues[index].toString();
+        });
+      } catch (error) {
+        console.error('Failed to process WebSocket message:', event.data);
+      }
+    });
+  </script>
+</body>
+</html>
