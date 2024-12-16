@@ -1,17 +1,10 @@
-// @ts-expect-error
-console.log = console.context().log;
-
 import { SliderClient } from "./sliderClient";
 console.log("Hello from frontend!");
 p5.disableFriendlyErrors = true;
-const E = Math.E
 let sketch: p5.Graphics;
 let myCamera: p5.Camera;
 
 let fps: p5.Element;
-
-let capture: p5.Element
-let captureImg: p5.Image;
 
 let cWidth:number
 let cHeight: number;
@@ -40,11 +33,37 @@ function setR2(value: number) {
   r2 = value;
 }
 
+let stream: MediaStream;
 
 function setup() {
     cWidth = 1024;
     cHeight = 768;
-    createCanvas(cWidth, cHeight, WEBGL).style("position", "absolute").style("top", "0").style("left", "0");
+    const canvas = createCanvas(cWidth, cHeight, WEBGL).style("position", "absolute").style("top", "0").style("left", "0");
+
+    const canvasElement = canvas.elt as HTMLCanvasElement;
+    canvasElement.getContext('webgl', { alpha: true });
+    stream = canvasElement.captureStream(30); // 30 fps
+  
+    const ws = new WebSocket('ws://localhost:8080');
+  
+    ws.onopen = () => {  
+      const mediaRecorder = new MediaRecorder(stream, { 
+        mimeType: 'video/webm; codecs=vp8' 
+      });
+      console.log(mediaRecorder)
+  
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          // Convert blob to buffer and send
+          event.data.arrayBuffer().then(buffer => {
+            ws.send(new Uint8Array(buffer));
+          });
+        }
+      };
+  
+      // Start recording
+      mediaRecorder.start(100); // Collect data in 100ms chunks
+    };
 
     sketch = createGraphics(cWidth, cHeight);
     myCamera = createCamera();
