@@ -3,7 +3,7 @@
   "module": "index.ts",
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/p5": "^1.7.6"
+    "@types/p5": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.7.2"
@@ -12,5 +12,8 @@
     "build": "bun build index.ts --outfile ./build/index.js",
     "watch": "bun build index.ts --no-bundle --watch --outfile ./build/index.js"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "p5": "latest"
+  }
 }

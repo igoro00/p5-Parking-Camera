@@ -1,5 +1,5 @@
 node_modules/
 .vscode/
-**/*.js
+build
 **/*.js.map
 !build/build.js
