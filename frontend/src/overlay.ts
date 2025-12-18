@@ -2,7 +2,7 @@ import type p5 from "p5";
 
 import { SliderClient } from "./sliderClient";
 
-const { PI, cos, sin, abs } = Math;
+const { PI, cos, sin } = Math;
 
 export class Overlay {
   private p: p5;
@@ -40,8 +40,7 @@ export class Overlay {
     this.p.perspective((2 * PI) / 3, width / height, 0.1, 2000);
 
     this.sketch.rectMode(this.p.CENTER).noFill();
-    this.p.frameRate(30);
-    this.p.orbitControl();
+    this.p.frameRate(10);
 
     new SliderClient("http://localhost:3000", ([s1, s2, s3, s4, s5]) => {
       this.steering = s1;
@@ -77,7 +76,7 @@ export class Overlay {
     sketch.strokeWeight(8);
     const line: p5.Vector[] = [];
 
-    let myColor = sketch.color(0, 170, 0, 255);
+    const myColor = sketch.color(0, 170, 0, 255);
     for (let i = 1; i < vertical; i++) {
       const percent = i / vertical;
       const start = this.p.createVector(
@@ -91,7 +90,7 @@ export class Overlay {
         start,
         length * sign,
         angle * percent,
-        i == vertical - 1
+        i === vertical - 1
       );
       sketch.point(end.x, end.y);
       line.push(end);

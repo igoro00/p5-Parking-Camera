@@ -3,7 +3,7 @@ import { Overlay } from "./src/overlay";
 
 
 const WIDTH = 1024;
-const HEIGHT = 768;
+const HEIGHT = 600;
 
 let mainCanvas: HTMLCanvasElement;
 const alphaCanvas = document.getElementById("alphaCanvas") as HTMLCanvasElement;
@@ -27,8 +27,8 @@ function onRunning() {
 
 	ws.onopen = () => {
 		// Start recording both streams
-		mainRecorder.start(50); 
-		alphaRecorder.start(50);
+		mainRecorder.start(100); 
+		alphaRecorder.start(100);
 	};
 
 	// Handle main stream chunks
@@ -74,5 +74,17 @@ const sketch = (p: p5) => {
 		overlay?.render();
 	};
 }
+async function setupCamera(){
+	const stream = await navigator.mediaDevices.getUserMedia({
+		video: {
+			width: WIDTH,
+			height: HEIGHT
+		}
+	})
+	const video = document.querySelector('video')
+	if(!video) throw new Error("No video element found")
+	video.srcObject = stream  // Play stream in <video> element
+}
+setupCamera();
 
 new p5(sketch);
